@@ -11,7 +11,8 @@ adzuna_country = "us"
 
 # Sources to use. Adzuna and USAJobs only run when their API keys are set
 # (see README); otherwise they are skipped with a message.
-sources = ["remotive", "remoteok", "arbeitnow", "themuse", "adzuna", "usajobs"]
+# "arbeitnow" is also available but is almost all European jobs, so it's off.
+sources = ["remotive", "remoteok", "themuse", "adzuna", "usajobs"]
 
 # Location words shared by both searches.
 [locations]

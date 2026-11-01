@@ -57,7 +57,7 @@ cover the new rows. Before each change, the previous file is saved as
 |---|---|---|
 | Remotive | No | Remote jobs, searched by keyword |
 | RemoteOK | No | Recent remote jobs |
-| Arbeitnow | No | Mostly Europe; most listings get filtered out |
+| Arbeitnow | No | Mostly Europe; off by default (add "arbeitnow" to `sources` in config.toml) |
 | The Muse | No | Searched by Muse category and location |
 | Adzuna | Free key | Broad US coverage, including local Austin jobs. Register at https://developer.adzuna.com |
 | USAJobs | Free key | Federal jobs. Request a key at https://developer.usajobs.gov |

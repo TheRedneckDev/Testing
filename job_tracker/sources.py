@@ -28,9 +28,9 @@ def make_job(*, source, source_id, title, company, location="", url="",
     return {
         "source": source,
         "source_id": str(source_id or ""),
-        "title": (title or "").strip(),
-        "company": (company or "").strip(),
-        "location": (location or "").strip(),
+        "title": _clean(title),
+        "company": _clean(company),
+        "location": _clean(location),
         "url": (url or "").strip(),
         "posted": _norm_date(posted),
         "salary": (salary or "").strip() if isinstance(salary, str) else _fmt_salary(*salary) if salary else "",
@@ -38,6 +38,11 @@ def make_job(*, source, source_id, title, company, location="", url="",
         "schedule": (schedule or "").replace("_", "-").strip(),
         "description": _strip_html(description or "")[:2000],
     }
+
+
+def _clean(text):
+    """Decode HTML entities like &amp; and tidy whitespace."""
+    return re.sub(r"\s+", " ", html.unescape(str(text or ""))).strip()
 
 
 def _get(url, *, params=None, headers=None):
