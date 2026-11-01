@@ -21,6 +21,7 @@ except ModuleNotFoundError:  # Python 3.8-3.10
 import requests
 
 from filters import match
+from linkcheck import check_many
 from sources import SOURCES, SkipSource
 from spreadsheet import NEW_STATUS, _norm_url, append_jobs, existing_keys, job_key
 
@@ -82,6 +83,8 @@ def main(argv=None):
     p.add_argument("--sources", help="comma-separated sources to use (default: all in config)")
     p.add_argument("--dry-run", action="store_true", help="show new jobs without editing the log")
     p.add_argument("--no-backup", action="store_true", help="don't write Job_Search_Log.xlsx.bak")
+    p.add_argument("--no-check-links", action="store_true",
+                   help="don't visit new jobs' links to confirm they're still active")
     args = p.parse_args(argv)
 
     cfg = load_config(args.config)
@@ -93,21 +96,43 @@ def main(argv=None):
     sources = args.sources.split(",") if args.sources else None
     found = search(cfg, args.category, sources)
 
+    # Only jobs not already in the log need their links checked.
+    keys, links = existing_keys(log_path)
+    candidates = [j for j in found
+                  if job_key(j["company"], j["title"]) not in keys and _norm_url(j["url"]) not in links]
+    already = len(found) - len(candidates)
+    gone = []
+    if candidates and not args.no_check_links:
+        print(f"\nChecking {len(candidates)} new job link(s) are still active...")
+        results = check_many(j["url"] for j in candidates)
+        kept = []
+        for j in candidates:
+            status, reason = results.get(j["url"], ("unknown", "no link"))
+            if status == "gone":
+                gone.append((j, reason))
+                continue
+            if status == "unknown":
+                j = dict(j, notes=f"{j['notes']} · Link not checked: {reason}")
+            kept.append(j)
+        candidates = kept
+
     if args.dry_run:
-        keys, links = existing_keys(log_path)
-        new = [j for j in found
-               if job_key(j["company"], j["title"]) not in keys and _norm_url(j["url"]) not in links]
+        new = candidates
     else:
-        added = append_jobs(log_path, found, backup=not args.no_backup)
+        added = append_jobs(log_path, candidates, backup=not args.no_backup)
         new = [{"category": r["Notes"].split(" search")[0], "company": r["Employer"],
                 "title": r["Role"], "salary": r["Pay"], "url": r["Application Link"]}
                for r in added]
 
     print(f"\n{len(new)} new job(s) {'would be ' if args.dry_run else ''}added "
-          f"({len(found) - len(new)} already in the log).")
+          f"({already} already in the log, {len(gone)} no longer active).")
     for j in new:
         pay = f" — {j['salary']}" if j["salary"] and j["salary"] != "Not listed" else ""
         print(f"  [{j['category']}] {j['company']}: {j['title']}{pay}\n      {j['url']}")
+    if gone:
+        print("\nSkipped because the posting is gone:")
+        for j, reason in gone:
+            print(f"  ✗ {j['company']}: {j['title']} — {reason}")
     if new and not args.dry_run:
         print(f"\nNew rows have Status '{NEW_STATUS}' and Applied? = No.")
         if not args.no_backup:

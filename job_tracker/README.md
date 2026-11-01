@@ -41,6 +41,26 @@ python track.py --sources remotive,themuse
 
 **Close the spreadsheet in Excel before running.**
 
+## Checking that jobs are still open
+
+`track.py` opens each new job's link before adding it, and skips the job if the posting is gone. Gone means one of these:
+- the page is missing (404);
+- it redirects to an error page; or
+- it says something like "no longer accepting applications" or "position has been filled".
+
+Sites that block the check or time out are kept, with a "Link not checked" note. Use `--no-check-links` to skip this step.
+
+To re-check the jobs already in your log:
+
+```bash
+python3 check_links.py --dry-run   # preview
+python3 check_links.py             # update the spreadsheet
+```
+
+This only looks at open leads: rows not applied to and not already Closed, Screened out, Rejected, Submitted, Interview or Offer. A lead whose posting is gone becomes **Closed**, with "Posting gone as of <date> (<reason>)" added to Notes. Rows you've applied to are never changed.
+
+Some job sites, such as Workday and Ashby, load their pages with JavaScript, so a closed posting there can still look open. Treat "still up" as likely, not certain.
+
 ## What gets written
 
 The tracker adds one row per new job, in the log's existing columns:

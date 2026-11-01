@@ -12,7 +12,7 @@ The job log exists in two places that must stay in sync:
 
 Run everything from `job_tracker/`. Ask the user to close the spreadsheet in Excel first.
 
-1. **Search (skip if the user only asked to sync).** Run `python3 track.py`. It adds new matches to the spreadsheet.
+1. **Search (skip if the user only asked to sync).** Run `python3 track.py`. It adds new matches to the spreadsheet and skips postings whose links are gone. Then run `python3 check_links.py` to mark open leads whose postings have closed as Closed. If the user asks to "check links" or "check which jobs are still open", run just `python3 check_links.py` and then continue with step 2.
 2. **Snapshot the page.** Delete `job_tracker/.page_snapshot/` if it exists. Then call `ArtifactData` with `action: "list"`, `collection: "jobs"`, `query: {"limit": 1000}` and `out_dir: <abs path>/job_tracker/.page_snapshot`. Keep the listing result: it shows each document's `version`.
 3. **Plan.** Run `python3 sync.py plan --page-dir .page_snapshot`. This updates the spreadsheet and writes `page_writes.json`.
 4. **Apply to the page.** Read `page_writes.json`. Send its entries with `ArtifactData` `action: "batch"`, at most 50 entries per call.
