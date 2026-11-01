@@ -86,14 +86,109 @@ def to_row(job, today):
     }
 
 
-def append_jobs(path, jobs, today=None, backup=True):
-    """Append jobs not already in the log. Returns the rows actually added."""
-    today = (today or date.today()).isoformat()
+def _style_like(ws, src_row, dst_row, cols):
+    for c in cols.values():
+        above, cell = ws.cell(src_row, c), ws.cell(dst_row, c)
+        cell.font, cell.border = copy(above.font), copy(above.border)
+        cell.alignment, cell.number_format = copy(above.alignment), above.number_format
+        cell.fill = copy(above.fill)
+
+
+def _set_link(ws, r, cols, url):
+    cell = ws.cell(r, cols["Application Link"], url or None)
+    cell.hyperlink = url or None
+    if url:
+        cell.font = Font(color="0563C1", underline="single")
+
+
+def _cell_text(v):
+    if v is None:
+        return ""
+    if hasattr(v, "date") and callable(v.date):  # datetime from Excel
+        return v.date().isoformat()
+    if hasattr(v, "isoformat"):
+        return v.isoformat()
+    return str(v).strip()
+
+
+def read_rows(path):
+    """All rows as {header: text} dicts, plus "_row" (the sheet row number)."""
+    ws = load_workbook(path)[SHEET]
+    cols = _col(ws)
+    rows = []
+    for r in range(2, _last_row(ws, cols) + 1):
+        row = {h: _cell_text(ws.cell(r, c).value) for h, c in cols.items()}
+        if row["Employer"] or row["Role"]:
+            row["_row"] = r
+            rows.append(row)
+    return rows
+
+
+def save(wb, path, backup=True):
+    if backup and os.path.exists(path):
+        shutil.copy2(path, path + ".bak")
+    tmp = path + ".tmp.xlsx"
+    wb.save(tmp)
+    os.replace(tmp, path)
+
+
+def write_changes(path, updates=(), new_rows=(), extra_statuses=(), backup=True):
+    """Apply cell updates and append rows, keeping table/dropdowns/formulas.
+
+    updates: iterable of (sheet_row, {header: value}).
+    new_rows: iterable of {header: value} dicts.
+    extra_statuses: Status values to add to the Status dropdown if missing.
+    """
+    updates, new_rows = list(updates), list(new_rows)
+    if not (updates or new_rows or extra_statuses):
+        return
     wb = load_workbook(path)
     ws = wb[SHEET]
     cols = _col(ws)
-    last = _last_row(ws, cols)
 
+    for r, fields in updates:
+        for h, v in fields.items():
+            if h == "Application Link":
+                _set_link(ws, r, cols, v)
+            else:
+                ws.cell(r, cols[h], v if v != "" else None)
+
+    last = _last_row(ws, cols)
+    for row in new_rows:
+        r = last + 1
+        if last >= 2:
+            _style_like(ws, last, r, cols)
+        for h, c in cols.items():
+            if h != "Application Link":
+                v = row.get(h)
+                ws.cell(r, c, v if v != "" else None)
+        _set_link(ws, r, cols, row.get("Application Link"))
+        last = r
+
+    # Grow the Excel table (and its autofilter) to cover new rows.
+    for table in ws.tables.values():
+        start, end = table.ref.split(":")
+        end_col = re.match(r"[A-Z]+", end).group()
+        end_row = max(int(re.search(r"\d+", end).group()), last)
+        table.ref = f"{start}:{end_col}{end_row}"
+        if table.autoFilter is not None:
+            table.autoFilter.ref = table.ref
+
+    # Make sure every Status value used is offered by the dropdown.
+    status_letter = ws.cell(1, cols["Status"]).column_letter
+    for dv in ws.data_validations.dataValidation:
+        if dv.formula1 and status_letter in str(dv.sqref):
+            options = dv.formula1.strip('"').split(",")
+            missing = [s for s in extra_statuses if s and s not in options]
+            if missing:
+                dv.formula1 = '"' + ",".join(options + missing) + '"'
+
+    save(wb, path, backup)
+
+
+def append_jobs(path, jobs, today=None, backup=True):
+    """Append search results not already in the log. Returns the rows added."""
+    today = (today or date.today()).isoformat()
     keys, links = existing_keys(path)
     added = []
     for job in jobs:
@@ -103,36 +198,6 @@ def append_jobs(path, jobs, today=None, backup=True):
         keys.add(k)
         if link:
             links.add(link)
-        row = to_row(job, today)
-        r = last + 1
-        for h, c in cols.items():
-            cell = ws.cell(r, c, row[h])
-            if last >= 2:  # copy the look of the row above
-                above = ws.cell(last, c)
-                cell.font, cell.border = copy(above.font), copy(above.border)
-                cell.alignment, cell.number_format = copy(above.alignment), above.number_format
-                cell.fill = copy(above.fill)
-        if row["Application Link"]:
-            link_cell = ws.cell(r, cols["Application Link"])
-            link_cell.hyperlink = row["Application Link"]
-            link_cell.font = Font(color="0563C1", underline="single")
-        last = r
-        added.append(row)
-
-    if not added:
-        return added
-
-    # Grow the Excel table (and its autofilter) to cover the new rows.
-    for table in ws.tables.values():
-        start, end = table.ref.split(":")
-        end_col = re.match(r"[A-Z]+", end).group()
-        table.ref = f"{start}:{end_col}{last}"
-        if table.autoFilter is not None:
-            table.autoFilter.ref = table.ref
-
-    if backup:
-        shutil.copy2(path, path + ".bak")
-    tmp = path + ".tmp.xlsx"
-    wb.save(tmp)
-    os.replace(tmp, path)
+        added.append(to_row(job, today))
+    write_changes(path, new_rows=added, backup=backup)
     return added

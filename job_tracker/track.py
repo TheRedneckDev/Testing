@@ -75,7 +75,7 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--config", default=os.path.join(HERE, "config.toml"))
     p.add_argument("--log", help="path to Job_Search_Log.xlsx (overrides config)")
-    p.add_argument("--category", help="run only this search (e.g. Support, Engineering)")
+    p.add_argument("--category", help="run only this search (e.g. Support, "Software Engineering")")
     p.add_argument("--sources", help="comma-separated sources to use (default: all in config)")
     p.add_argument("--dry-run", action="store_true", help="show new jobs without editing the log")
     p.add_argument("--no-backup", action="store_true", help="don't write Job_Search_Log.xlsx.bak")

@@ -48,7 +48,7 @@ search_location = ""
 # on-site/hybrid within 30 miles of 78660. No Lead roles.
 # ---------------------------------------------------------------------------
 [[categories]]
-name = "Engineering"
+name = "Software Engineering"
 remote_only = false
 search_keywords = ["software engineer", "software developer", "java", "spring boot",
                    "full stack", "qa engineer", "sales engineer"]
