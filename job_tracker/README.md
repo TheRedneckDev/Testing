@@ -24,7 +24,7 @@ Needs Python 3.8 or newer.
 
 ```bash
 cd job_tracker
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 By default the tracker uses `~/Downloads/JobStuff/Job_Search_Log.xlsx`. Change `log_path` in
@@ -33,10 +33,10 @@ By default the tracker uses `~/Downloads/JobStuff/Job_Search_Log.xlsx`. Change `
 ## Run
 
 ```bash
-python track.py --dry-run      # preview new jobs; the spreadsheet is not touched
-python track.py                # add new jobs to the log
-python track.py --category Support
-python track.py --sources remotive,themuse
+python3 track.py --dry-run      # preview new jobs; the spreadsheet is not touched
+python3 track.py                # add new jobs to the log
+python3 track.py --category Support
+python3 track.py --sources remotive,themuse
 ```
 
 **Close the spreadsheet in Excel before running.**
