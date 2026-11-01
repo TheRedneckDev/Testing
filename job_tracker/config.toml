@@ -1,0 +1,67 @@
+# Job tracker configuration.
+#
+# Path to your existing job log. Can be overridden with --log.
+log_path = "~/Downloads/JobStuff/Job_Search_Log.xlsx"
+
+[settings]
+max_results_per_source = 50   # per keyword, for sources that search by keyword
+max_pages = 3                 # for sources that page through all listings
+max_days_old = 30             # skip postings older than this (when the source gives a date)
+adzuna_country = "us"
+
+# Sources to use. Adzuna and USAJobs only run when their API keys are set
+# (see README); otherwise they are skipped with a message.
+sources = ["remotive", "remoteok", "arbeitnow", "themuse", "adzuna", "usajobs"]
+
+# Location words shared by both searches.
+[locations]
+# Places within ~30 miles of ZIP 78660 (Pflugerville).
+local_terms = ["Pflugerville", "Austin", "Round Rock", "Cedar Park", "Georgetown",
+               "Hutto", "Leander", "Manor", "Taylor", "Elgin", "Kyle", "Buda", "Lakeway"]
+texas_terms = ["Texas", "TX"]
+us_terms = ["US", "USA", "U.S.", "United States", "America", "Americas", "North America",
+            "Anywhere", "Worldwide", "Global"]
+
+# ---------------------------------------------------------------------------
+# Search 1: Remote tech support / customer service
+# Work from home only; part-time, full-time, temporary and contract all OK.
+# ---------------------------------------------------------------------------
+[[categories]]
+name = "Support"
+remote_only = true
+search_keywords = ["technical support", "customer support", "customer service", "help desk"]
+title_include = ["technical support", "tech support", "customer support", "customer service",
+                 "customer success associate", "help desk", "helpdesk", "service desk",
+                 "support specialist", "support representative", "support agent",
+                 "support engineer", "support analyst", "support associate",
+                 "member support", "client support", "call center"]
+title_exclude = ["lead", "manager", "director", "supervisor", "head of", "vp", "vice president",
+                 "team lead"]
+muse_categories = ["Customer Service"]
+muse_locations = ["Flexible / Remote"]
+search_location = ""
+
+# ---------------------------------------------------------------------------
+# Search 2: Software engineering
+# Priority: Software Developer/Engineer, then Senior SWE, then entry-level QA,
+# then technical sales (Sales/Solutions Engineer). Remote nationwide, or
+# on-site/hybrid within 30 miles of 78660. No Lead roles.
+# ---------------------------------------------------------------------------
+[[categories]]
+name = "Software Engineering"
+remote_only = false
+search_keywords = ["software engineer", "software developer", "java", "spring boot",
+                   "full stack", "qa engineer", "sales engineer"]
+title_include = ["software engineer", "software developer", "backend engineer",
+                 "back end engineer", "back-end engineer", "full stack", "fullstack",
+                 "java developer", "java engineer", "spring boot", "frontend engineer",
+                 "front end engineer", "application developer", "web developer",
+                 "qa engineer", "quality engineer", "quality assurance", "test engineer",
+                 "sdet", "software tester", "sales engineer", "solutions engineer"]
+title_exclude = ["lead", "tech lead", "team lead", "manager", "director", "head of",
+                 "vp", "vice president", "intern", "principal", "staff", "architect"]
+# Pay at or above this gets a "check seniority" note (a caution, not a cutoff).
+salary_caution_at = 160000
+muse_categories = ["Software Engineering"]
+muse_locations = ["Flexible / Remote", "Austin, TX"]
+search_location = "Austin, TX"

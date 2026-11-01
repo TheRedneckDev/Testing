@@ -1,0 +1,9 @@
+__pycache__/
+*.xlsx
+*.xlsx.bak
+*.tmp.xlsx
+*.sync.json
+*.sync.pending.json
+page_writes.json
+.page_snapshot/
+.env
