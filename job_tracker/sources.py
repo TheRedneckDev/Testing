@@ -255,12 +255,14 @@ def company_boards(category, settings):
                 failed.append(f"{kind}:{name}")
 
     def greenhouse(token):
-        data = _get(f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs")
+        data = _get(f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs",
+                    params={"content": "true"})
         return [make_job(
             source="Employer board (Greenhouse)", source_id=j.get("id"), title=j.get("title"),
             company=_company_name(j.get("company_name") or token),
             location=(j.get("location") or {}).get("name"), url=j.get("absolute_url"),
-            posted=j.get("first_published") or j.get("updated_at"))
+            posted=j.get("first_published") or j.get("updated_at"),
+            description=html.unescape(j.get("content") or ""))
             for j in data.get("jobs", [])]
 
     def lever(company):
@@ -287,7 +289,8 @@ def company_boards(category, settings):
             title=j.get("title"), company=_company_name(board), location=j.get("location"),
             url=j.get("jobUrl") or j.get("applyUrl"), posted=j.get("publishedAt"),
             salary=(j.get("compensation") or {}).get("compensationTierSummary") or "",
-            remote=bool(j.get("isRemote")) or None, schedule=j.get("employmentType"))
+            remote=bool(j.get("isRemote")) or None, schedule=j.get("employmentType"),
+            description=j.get("descriptionPlain") or j.get("descriptionHtml") or "")
             for j in data.get("jobs", [])]
 
     each("greenhouse", greenhouse)

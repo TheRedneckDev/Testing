@@ -9,6 +9,13 @@ Searches job sites for your two searches and adds new matches to your existing
 | **Software Engineering** | Software Developer/Engineer, Senior SWE, QA/test, and Sales/Solutions Engineer. Remote nationwide, or on-site/hybrid within ~30 miles of 78660. |
 
 Both searches skip Lead, Manager, Director and Supervisor titles. Software Engineering also skips Principal, Staff, Architect and Intern. It also matches government titles like Programmer, Programmer Analyst and IT Specialist (APPSW).
+Software Engineering is also filtered by your résumé skills (`my_skills` and `avoid_skills` in `config.toml`). A job is skipped when:
+- its title names a stack you don't use (C++, Rust, Go, Python, iOS/Android, embedded, ML, Salesforce and so on) and none of your skills;
+- its description is about such a stack and mentions none of your skills; or
+- its full description mentions none of your skills. QA and Sales Engineer roles are exempt from this last rule.
+
+Kept jobs get a "Your skills mentioned: …" note.
+
 Software Engineering skips jobs whose pay range goes above $160k a year (hourly and monthly pay are converted to yearly). Jobs with no pay listed are kept. Change `salary_max` and `salary_cutoff` in `config.toml`. It also skips "Programmer" titles that aren't software jobs, like CMM, CNC, SAS and statistical programmers.
 
 ## Setup (once)

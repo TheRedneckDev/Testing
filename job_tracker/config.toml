@@ -97,6 +97,25 @@ title_exclude = ["lead", "tech lead", "team lead", "manager", "director", "head 
                  # "Programmer" titles that aren't software development:
                  "cmm", "cnc", "edm", "plc", "metrology", "machinist", "sas programmer",
                  "statistical programmer", "bas programmer", "clinical programmer"]
+# Résumé-based filtering (see filters.skills_check). A job is dropped when its
+# title names an avoid_skills stack and none of my_skills, when its description
+# is about an avoid_skills stack with none of my_skills, or when a full
+# description (600+ characters) mentions none of my_skills.
+my_skills = ["java", "spring", "spring boot", "hibernate", "jpa", "j2ee", "jakarta ee",
+             "microservices", "typescript", "javascript", "react", "angular", "svelte",
+             "node.js", "nodejs", "c#", ".net", "asp.net", "kafka", "rabbitmq", "junit",
+             "cobol", "mainframe", "full stack", "full-stack", "fullstack"]
+avoid_skills = ["c++", "c/c++", "rust", "golang", "go developer", "go engineer", "python",
+                "django", "flask", "ruby", "rails", "php", "laravel", "scala", "perl",
+                "elixir", "erlang", "haskell", "clojure", "swift", "ios", "android",
+                "flutter", "embedded", "firmware", "fpga", "vlsi", "asic", "rtl", "verilog",
+                "kernel", "cuda", "machine learning", "ml engineer", "data scientist",
+                "salesforce", "apex", "sap", "abap", "servicenow", "appian",
+                "power platform", "dynamics 365", "unity", "unreal", "solidity"]
+skills_exempt_titles = ["qa", "quality", "test", "tester", "sdet", "sales engineer",
+                        "solutions engineer"]
+skills_min_description = 600
+
 # Skip jobs that pay more than this per year. Hourly and monthly pay is
 # converted to yearly. salary_cutoff = "top" drops a job when the TOP of its
 # range is over the limit ($122k-$240k is dropped); "bottom" drops it only when

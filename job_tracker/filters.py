@@ -11,6 +11,46 @@ def _any(patterns, text):
     return any(re.search(rf"\b{re.escape(p.lower())}\b", text) for p in patterns)
 
 
+def _has(term, text):
+    """Whole-term match that also works for terms like "c++", "c#" and ".net"."""
+    return re.search(rf"(?<![\w+#.]){re.escape(term.lower())}(?![\w+#])", text) is not None
+
+
+def _found(terms, text):
+    text = text.lower()
+    return [t for t in terms if _has(t, text)]
+
+
+def skills_check(job, category):
+    """Return (keep, matched_skills) based on the résumé skill lists in config.
+
+    Drops a job when:
+      1. its title names a stack from avoid_skills and none of your skills, or
+      2. its description mentions avoid_skills and none of your skills, or
+      3. its description is long enough to judge but mentions none of your
+         skills (titles in skills_exempt_titles, e.g. QA and Sales Engineer,
+         skip this rule since those postings often don't list languages).
+    """
+    mine = category.get("my_skills")
+    if not mine:
+        return True, []
+    avoid = category.get("avoid_skills", [])
+    title, desc = job["title"], job.get("description", "")
+    title_mine, title_avoid = _found(mine, title), _found(avoid, title)
+    if title_avoid and not title_mine:
+        return False, []
+    desc_mine = _found(mine, desc)
+    matched = list(dict.fromkeys(title_mine + desc_mine))
+    if matched:
+        return True, matched
+    if _found(avoid, desc):
+        return False, []
+    exempt = _any(category.get("skills_exempt_titles", []), title)
+    if len(desc) >= category.get("skills_min_description", 600) and not exempt:
+        return False, []
+    return True, []
+
+
 def annual_pay(salary):
     """Dollar figures in a pay string, converted to yearly amounts.
 
@@ -71,6 +111,10 @@ def match(job, category, settings, today=None):
     if not ok:
         return None
 
+    keep, skills = skills_check(job, category)
+    if not keep:
+        return None
+
     # Pay cutoff: drop jobs whose pay range goes above salary_max.
     salary_max = category.get("salary_max")
     if salary_max and job["salary"]:
@@ -90,6 +134,8 @@ def match(job, category, settings, today=None):
             pass
 
     notes = [f"{category['name']} search", f"Location: {job['location'] or 'not stated'}"]
+    if skills:
+        notes.append("Your skills mentioned: " + ", ".join(skills[:6]))
     notes.append("Auto-found; verify on employer site before applying")
 
     out = dict(job)
