@@ -13,7 +13,10 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-import tomllib
+try:
+    import tomllib  # Python 3.11+
+except ModuleNotFoundError:  # Python 3.8-3.10
+    import tomli as tomllib
 
 import requests
 

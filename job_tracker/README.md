@@ -13,7 +13,7 @@ Software Engineering jobs paying $160k or more get a "check seniority/scope" not
 
 ## Setup (once)
 
-Needs Python 3.11 or newer.
+Needs Python 3.8 or newer.
 
 ```bash
 cd job_tracker

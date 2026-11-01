@@ -218,7 +218,10 @@ def commit(log_path):
 
 
 def main(argv=None):
-    import tomllib
+    try:
+        import tomllib  # Python 3.11+
+    except ModuleNotFoundError:  # Python 3.8-3.10
+        import tomli as tomllib
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("command", choices=["plan", "commit"])
     p.add_argument("--log", help="path to Job_Search_Log.xlsx (default: log_path in config.toml)")
