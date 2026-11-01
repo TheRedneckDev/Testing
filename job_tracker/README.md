@@ -9,7 +9,7 @@ Searches job sites for your two searches and adds new matches to your existing
 | **Software Engineering** | Software Developer/Engineer, Senior SWE, QA/test, and Sales/Solutions Engineer. Remote nationwide, or on-site/hybrid within ~30 miles of 78660. |
 
 Both searches skip Lead, Manager, Director and Supervisor titles. Software Engineering also skips Principal, Staff, Architect and Intern. It also matches government titles like Programmer, Programmer Analyst and IT Specialist (APPSW).
-Software Engineering jobs paying $160k or more get a "check seniority/scope" note. They are not skipped.
+Software Engineering skips jobs whose pay range goes above $160k a year (hourly and monthly pay are converted to yearly). Jobs with no pay listed are kept. Change `salary_max` and `salary_cutoff` in `config.toml`. It also skips "Programmer" titles that aren't software jobs, like CMM, CNC, SAS and statistical programmers.
 
 ## Setup (once)
 

@@ -11,14 +11,27 @@ def _any(patterns, text):
     return any(re.search(rf"\b{re.escape(p.lower())}\b", text) for p in patterns)
 
 
-def _salary_numbers(salary):
-    """Annual-ish dollar figures in a salary string ("$120k", "$120,000")."""
+def annual_pay(salary):
+    """Dollar figures in a pay string, converted to yearly amounts.
+
+    Handles "$120k - $150k", "$122,000", "$56 - $60 per hour" (x 2080) and
+    "$5,425 - $7,100 per month" (x 12). Returns [] when no amount is found.
+    """
+    text = salary.lower()
+    if re.search(r"hour|/\s*hr\b|hourly", text):
+        factor = 2080
+    elif re.search(r"month|/\s*mo\b|monthly", text):
+        factor = 12
+    elif re.search(r"week|/\s*wk\b|weekly", text):
+        factor = 52
+    else:
+        factor = 1
     nums = []
-    for m in re.finditer(r"\$?\s*(\d[\d,]*(?:\.\d+)?)\s*(k)?", salary.lower()):
+    for m in re.finditer(r"\$\s*(\d[\d,]*(?:\.\d+)?)\s*(k)?", text):
         n = float(m.group(1).replace(",", ""))
         if m.group(2):
             n *= 1000
-        nums.append(n)
+        nums.append(n * factor)
     return nums
 
 
@@ -58,6 +71,15 @@ def match(job, category, settings, today=None):
     if not ok:
         return None
 
+    # Pay cutoff: drop jobs whose pay range goes above salary_max.
+    salary_max = category.get("salary_max")
+    if salary_max and job["salary"]:
+        pay = annual_pay(job["salary"])
+        if pay:
+            top_or_bottom = max(pay) if category.get("salary_cutoff", "top") == "top" else min(pay)
+            if top_or_bottom > salary_max:
+                return None
+
     max_age = settings.get("max_days_old")
     if max_age and job["posted"]:
         try:
@@ -68,11 +90,6 @@ def match(job, category, settings, today=None):
             pass
 
     notes = [f"{category['name']} search", f"Location: {job['location'] or 'not stated'}"]
-    caution = category.get("salary_caution_at")
-    if caution and job["salary"]:
-        nums = _salary_numbers(job["salary"])
-        if nums and max(nums) >= caution:
-            notes.append(f"Pay ≥ ${caution:,.0f} — check seniority/scope")
     notes.append("Auto-found; verify on employer site before applying")
 
     out = dict(job)

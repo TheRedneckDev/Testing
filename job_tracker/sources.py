@@ -345,24 +345,36 @@ def jooble(category, settings):
     key = os.environ.get("JOOBLE_API_KEY")
     if not key:
         raise SkipSource("set JOOBLE_API_KEY to enable")
-    jobs = []
+    jobs, failed = [], []
     for kw in category["search_keywords"]:
-        body = {"keywords": f"{kw} remote" if category.get("remote_only") else kw,
-                "location": category.get("search_location") or "United States", "page": 1}
+        body = {"keywords": f"{kw} remote" if category.get("remote_only") else kw, "page": 1}
+        if category.get("search_location"):
+            body["location"] = category["search_location"]
         cache_key = ("jooble", repr(body))
         if cache_key not in _CACHE:
-            resp = requests.post(f"https://jooble.org/api/{key}", json=body,
-                                 headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT)
-            resp.raise_for_status()
-            _CACHE[cache_key] = resp.json()
+            try:
+                resp = requests.post(f"https://jooble.org/api/{key}", json=body,
+                                     headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT)
+                resp.raise_for_status()
+                _CACHE[cache_key] = resp.json()
+            except (requests.RequestException, ValueError) as e:
+                failed.append(f"'{kw}' ({getattr(e.response, 'status_code', None) or type(e).__name__})"
+                              if isinstance(e, requests.RequestException) else f"'{kw}'")
+                continue
         for j in _CACHE[cache_key].get("jobs", []):
-            text = f"{j.get('location', '')} {j.get('title', '')} {j.get('snippet', '')}".lower()
+            # Only trust "remote" in the title/location; descriptions often say
+            # things like "not remote".
+            text = f"{j.get('location', '')} {j.get('title', '')}".lower()
             jobs.append(make_job(
                 source=f"Jooble ({j['source']})" if j.get("source") else "Jooble",
                 source_id=j.get("id"), title=j.get("title"), company=j.get("company"),
                 location=j.get("location"), url=j.get("link"), posted=j.get("updated"),
                 salary=j.get("salary") or "", remote=("remote" in text) or None,
                 schedule=j.get("type"), description=j.get("snippet")))
+    if failed and not jobs:
+        raise requests.RequestException("every search failed: " + ", ".join(failed))
+    if failed:
+        print(f"    (jooble searches that failed: {', '.join(failed)})")
     return jobs
 
 

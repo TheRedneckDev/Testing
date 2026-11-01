@@ -93,9 +93,16 @@ title_include = ["software engineer", "software developer", "backend engineer",
                  # Common in government job titles:
                  "programmer", "programmer analyst", "appsw", "computer scientist"]
 title_exclude = ["lead", "tech lead", "team lead", "manager", "director", "head of",
-                 "vp", "vice president", "intern", "principal", "staff", "architect"]
-# Pay at or above this gets a "check seniority" note (a caution, not a cutoff).
-salary_caution_at = 160000
+                 "vp", "vice president", "intern", "principal", "staff", "architect",
+                 # "Programmer" titles that aren't software development:
+                 "cmm", "cnc", "edm", "plc", "metrology", "machinist", "sas programmer",
+                 "statistical programmer", "bas programmer", "clinical programmer"]
+# Skip jobs that pay more than this per year. Hourly and monthly pay is
+# converted to yearly. salary_cutoff = "top" drops a job when the TOP of its
+# range is over the limit ($122k-$240k is dropped); "bottom" drops it only when
+# the whole range is over ($122k-$240k is kept). Jobs with no pay listed are kept.
+salary_max = 160000
+salary_cutoff = "top"
 muse_categories = ["Software Engineering"]
 wwr_categories = ["remote-full-stack-programming-jobs", "remote-back-end-programming-jobs",
                   "remote-front-end-programming-jobs"]
