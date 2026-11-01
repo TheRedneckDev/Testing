@@ -54,8 +54,8 @@ def search(cfg, only_category=None, only_sources=None, log=print):
             except SkipSource as e:
                 log(f"  - {name}: skipped ({e})")
                 continue
-            except (requests.RequestException, ValueError) as e:
-                log(f"  ! {name}: failed ({e})")
+            except Exception as e:  # one broken source shouldn't stop the run
+                log(f"  ! {name}: failed ({type(e).__name__}: {e})")
                 continue
             hits = 0
             for job in jobs:

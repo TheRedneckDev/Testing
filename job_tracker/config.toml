@@ -9,10 +9,40 @@ max_pages = 3                 # for sources that page through all listings
 max_days_old = 30             # skip postings older than this (when the source gives a date)
 adzuna_country = "us"
 
-# Sources to use. Adzuna and USAJobs only run when their API keys are set
-# (see README); otherwise they are skipped with a message.
+# Sources to use. Adzuna, Jooble and USAJobs only run when their API keys are
+# set (see README); otherwise they are skipped with a message.
 # "arbeitnow" is also available but is almost all European jobs, so it's off.
-sources = ["remotive", "remoteok", "themuse", "adzuna", "usajobs"]
+sources = ["remotive", "remoteok", "themuse", "jobicy", "himalayas", "weworkremotely",
+           "workingnomads", "hackernews", "companies", "adzuna", "jooble", "usajobs"]
+
+# Employers whose own job boards are checked directly ("companies" source).
+# The name is the part of the board's URL after the domain, e.g.
+#   job-boards.greenhouse.io/submittable  -> "submittable"
+#   jobs.lever.co/entrata                 -> "entrata"
+#   jobs.ashbyhq.com/elevenlabs           -> "elevenlabs"
+# These came from your job log. Add any company you'd like watched.
+[settings.companies]
+greenhouse = ["submittable", "perfectserve", "newsela", "assetwatch", "arive", "calendly",
+              "syllo", "alertmedia", "lightspeedsystems", "renewedvision", "openeye",
+              "opentable", "degreed", "heartflowinc", "striveworks"]
+lever = ["entrata", "easypost-2", "aircall", "heard", "getfivestar", "foodsmart", "lwolf"]
+ashby = ["elevenlabs"]
+
+# How to show a company when its board name isn't its real name.
+[settings.companies.names]
+easypost-2 = "EasyPost"
+getfivestar = "Five Star Solutions"
+lwolf = "Lone Wolf Technologies"
+arive = "ARIVE"
+alertmedia = "AlertMedia"
+assetwatch = "AssetWatch"
+lightspeedsystems = "Lightspeed Systems"
+renewedvision = "Renewed Vision"
+openeye = "OpenEye"
+opentable = "OpenTable"
+perfectserve = "PerfectServe"
+heartflowinc = "HeartFlow"
+elevenlabs = "ElevenLabs"
 
 # Location words shared by both searches.
 [locations]
@@ -39,6 +69,7 @@ title_include = ["technical support", "tech support", "customer support", "custo
 title_exclude = ["lead", "manager", "director", "supervisor", "head of", "vp", "vice president",
                  "team lead"]
 muse_categories = ["Customer Service"]
+wwr_categories = ["remote-customer-support-jobs"]
 muse_locations = ["Flexible / Remote"]
 search_location = ""
 
@@ -51,18 +82,22 @@ search_location = ""
 [[categories]]
 name = "Software Engineering"
 remote_only = false
-search_keywords = ["software engineer", "software developer", "java", "spring boot",
-                   "full stack", "qa engineer", "sales engineer"]
+search_keywords = ["software engineer", "software developer", "programmer", "java",
+                   "spring boot", "full stack", "qa engineer", "sales engineer"]
 title_include = ["software engineer", "software developer", "backend engineer",
                  "back end engineer", "back-end engineer", "full stack", "fullstack",
                  "java developer", "java engineer", "spring boot", "frontend engineer",
                  "front end engineer", "application developer", "web developer",
                  "qa engineer", "quality engineer", "quality assurance", "test engineer",
-                 "sdet", "software tester", "sales engineer", "solutions engineer"]
+                 "sdet", "software tester", "sales engineer", "solutions engineer",
+                 # Common in government job titles:
+                 "programmer", "programmer analyst", "appsw", "computer scientist"]
 title_exclude = ["lead", "tech lead", "team lead", "manager", "director", "head of",
                  "vp", "vice president", "intern", "principal", "staff", "architect"]
 # Pay at or above this gets a "check seniority" note (a caution, not a cutoff).
 salary_caution_at = 160000
 muse_categories = ["Software Engineering"]
+wwr_categories = ["remote-full-stack-programming-jobs", "remote-back-end-programming-jobs",
+                  "remote-front-end-programming-jobs"]
 muse_locations = ["Flexible / Remote", "Austin, TX"]
 search_location = "Austin, TX"
