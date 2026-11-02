@@ -1,11 +1,13 @@
 # Job tracker: command cheat sheet
 
-Searches job sites for two searches and adds new matches to `~/JobTracker/JobStuff/Job_Search_Log.xlsx`:
+Searches job sites and adds new matches to a job-log spreadsheet. It has two profiles: one for Julian and one for Elizabeth.
 
-- **Support:** remote tech support and customer service jobs.
-- **Software Engineering:** Java/full-stack, QA and Sales Engineer roles, either remote or near Austin.
-
-It also keeps the spreadsheet in sync with the [Job Tracker page](https://claude.ai/artifact/SXzbUitgGK2Q5jWACxrAct).
+| | Julian | Elizabeth |
+|---|---|---|
+| Searches | **Support** (remote tech support / customer service) and **Software Engineering** (Java/full-stack, QA, Sales Engineer) | **Customer Support** (non-technical, no sales) and **Receptionist** / front desk |
+| Settings file | `job_tracker/config.toml` | `job_tracker/config-elizabeth.toml` |
+| Spreadsheet | `~/JobTracker/JobStuff/Job_Search_Log.xlsx` | `~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx` |
+| Job Tracker page | [Synced](https://claude.ai/artifact/SXzbUitgGK2Q5jWACxrAct) | None (spreadsheet only) |
 
 This page lists the commands. For how the filters, sources and sync work, see [`job_tracker/README.md`](job_tracker/README.md).
 
@@ -13,6 +15,48 @@ This page lists the commands. For how the filters, sources and sync work, see [`
 
 ```bash
 cd ~/JobTracker/Testing/job_tracker
+```
+
+---
+
+## Switching between Julian and Elizabeth
+
+Every command runs **Julian's** profile by default. To run **Elizabeth's** instead, add `--config config-elizabeth.toml` to the same command:
+
+| To… | Julian | Elizabeth |
+|---|---|---|
+| Preview new jobs | `python3 track.py --dry-run` | `python3 track.py --config config-elizabeth.toml --dry-run` |
+| Add new jobs | `python3 track.py` | `python3 track.py --config config-elizabeth.toml` |
+| Close postings that are gone | `python3 check_links.py` | `python3 check_links.py --config config-elizabeth.toml` |
+| Delete jobs that no longer fit | `python3 prune.py --delete` | `python3 prune.py --config config-elizabeth.toml --delete` |
+| Open the spreadsheet | `open ~/JobTracker/JobStuff/Job_Search_Log.xlsx` | `open ~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx` |
+| Sync with the Job Tracker page | Say "sync my job tracker" in Claude Code | Not set up; her list is only a spreadsheet |
+
+The two profiles don't share anything except your API keys. Each has its own settings, spreadsheet and backups, so running one never touches the other's list.
+
+**How to tell which one ran:** the first line of the output shows the spreadsheet being updated (`…/JobStuff/…` for Julian, `…/ElizabethJobs/…` for Elizabeth). The search names in the summary (Support / Software Engineering, or Customer Support / Receptionist) also show which profile it was.
+
+### Optional: one-word shortcuts
+
+To skip typing the folder and `--config` each time, add shortcuts to `~/.zshrc` once:
+
+```bash
+cat >> ~/.zshrc <<'ALIASES'
+alias jobs-julian='cd ~/JobTracker/Testing/job_tracker && python3 track.py'
+alias jobs-liz='cd ~/JobTracker/Testing/job_tracker && python3 track.py --config config-elizabeth.toml'
+alias links-julian='cd ~/JobTracker/Testing/job_tracker && python3 check_links.py'
+alias links-liz='cd ~/JobTracker/Testing/job_tracker && python3 check_links.py --config config-elizabeth.toml'
+ALIASES
+source ~/.zshrc
+```
+
+Then run them from any folder, adding options as usual:
+
+```bash
+jobs-liz --dry-run        # preview Elizabeth's new jobs
+jobs-liz                  # add them to her spreadsheet
+jobs-julian --dry-run     # preview Julian's
+links-liz                 # close her postings that are gone
 ```
 
 ---
@@ -75,15 +119,7 @@ Elizabeth's settings are in `job_tracker/config-elizabeth.toml`:
 
 Her spreadsheet is `~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx`. It's created automatically the first time `track.py` runs without `--dry-run`, in the same layout as Julian's.
 
-Every command works for her by adding `--config config-elizabeth.toml`:
-
-```bash
-python3 track.py --config config-elizabeth.toml --dry-run    # preview new jobs
-python3 track.py --config config-elizabeth.toml              # add them (creates her log the first time)
-python3 check_links.py --config config-elizabeth.toml        # close postings that are gone
-python3 prune.py --config config-elizabeth.toml --delete     # delete jobs that no longer fit
-open ~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx          # look at her list
-```
+For the commands, see [Switching between Julian and Elizabeth](#switching-between-julian-and-elizabeth).
 
 Her searches use the same API keys (Adzuna, Jooble, USAJobs). Adzuna and Jooble are the main sources for local Pflugerville and Austin jobs, so make sure those keys are set. Her list isn't synced to a Job Tracker page; it's only a spreadsheet.
 
