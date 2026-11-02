@@ -132,15 +132,41 @@ def save(wb, path, backup=True):
     os.replace(tmp, path)
 
 
-def write_changes(path, updates=(), new_rows=(), extra_statuses=(), backup=True):
-    """Apply cell updates and append rows, keeping table/dropdowns/formulas.
+def _compact(ws, cols, delete, last):
+    """Remove the given sheet rows by shifting the rows below them up.
+
+    Copies values, styles and links cell by cell (rather than Excel-style row
+    deletion) so the table, dropdowns and Summary formulas stay pointed at the
+    same columns and ranges. Returns the new last row.
+    """
+    keep = [r for r in range(2, last + 1) if r not in delete]
+    for dst, src in enumerate(keep, start=2):
+        if dst == src:
+            continue
+        for c in cols.values():
+            a, b = ws.cell(src, c), ws.cell(dst, c)
+            b.value = a.value
+            b.font, b.border, b.fill = copy(a.font), copy(a.border), copy(a.fill)
+            b.alignment, b.number_format = copy(a.alignment), a.number_format
+            b.hyperlink = a.hyperlink.target if a.hyperlink else None
+    new_last = len(keep) + 1
+    for r in range(new_last + 1, last + 1):
+        for c in cols.values():
+            cell = ws.cell(r, c)
+            cell.value, cell.hyperlink = None, None
+    return new_last
+
+
+def write_changes(path, updates=(), new_rows=(), extra_statuses=(), delete_rows=(), backup=True):
+    """Apply cell updates, append rows and delete rows, keeping table/dropdowns/formulas.
 
     updates: iterable of (sheet_row, {header: value}).
     new_rows: iterable of {header: value} dicts.
     extra_statuses: Status values to add to the Status dropdown if missing.
+    delete_rows: sheet row numbers to remove (as numbered before this call).
     """
-    updates, new_rows = list(updates), list(new_rows)
-    if not (updates or new_rows or extra_statuses):
+    updates, new_rows, delete_rows = list(updates), list(new_rows), set(delete_rows)
+    if not (updates or new_rows or extra_statuses or delete_rows):
         return
     wb = load_workbook(path)
     ws = wb[SHEET]
@@ -165,11 +191,16 @@ def write_changes(path, updates=(), new_rows=(), extra_statuses=(), backup=True)
         _set_link(ws, r, cols, row.get("Application Link"))
         last = r
 
-    # Grow the Excel table (and its autofilter) to cover new rows.
+    if delete_rows:
+        last = _compact(ws, cols, delete_rows, last)
+
+    # Fit the Excel table (and its autofilter) to the rows.
     for table in ws.tables.values():
         start, end = table.ref.split(":")
         end_col = re.match(r"[A-Z]+", end).group()
         end_row = max(int(re.search(r"\d+", end).group()), last)
+        if delete_rows:
+            end_row = max(last, 2)
         table.ref = f"{start}:{end_col}{end_row}"
         if table.autoFilter is not None:
             table.autoFilter.ref = table.ref

@@ -135,7 +135,7 @@ How the sync decides:
 - **Missing jobs:** a job on only one side is copied to the other. Jobs are matched by employer + role, or by link.
 - **Edits:** for each field (Status, Applied?, Date Applied, Notes and so on), whichever side changed since the last sync wins.
 - **Conflicts:** if both sides changed the same field, the page wins and Claude tells you.
-- **Deletions:** a job deleted on one side after a sync is not re-created there.
+- **Deletions:** a job deleted on one side after a sync is deleted on the other side too, unless it was edited there since the last sync. In that case it's kept and put back, and you're told.
 - **Wording:** Software Engineering jobs are marked "Software Engineering search · …" in the spreadsheet's Notes. The page's "In progress – not submitted" status is "In progress" in the spreadsheet.
 
 The sync baseline is saved next to the spreadsheet as `Job_Search_Log.xlsx.sync.json`.

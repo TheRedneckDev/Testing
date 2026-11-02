@@ -5,7 +5,8 @@ Use this after changing filters (config.toml), so older rows that no longer fit
 are labelled. Only rows the tracker added ("Job tracker → ..." in Found Via)
 that are still untouched (Applied? = No and Status "Unverified – check employer
 site") are checked. A row that no longer fits becomes "Screened out", with
-"Screened out by filter: <reason>" added to Notes. Nothing is deleted.
+"Screened out by filter: <reason>" added to Notes, or, with --delete, is removed.
+Rows you've applied to or changed yourself are never touched.
 
 Old rows only keep the title, employer, pay and location, so the checks that need
 the full description can't be repeated here: titles, pay and location are.
@@ -13,6 +14,7 @@ the full description can't be repeated here: titles, pay and location are.
 Usage:
     python prune.py --dry-run   # show what would be screened out
     python prune.py             # update the spreadsheet
+    python prune.py --delete    # delete those rows instead of marking them
 """
 
 from __future__ import annotations
@@ -47,6 +49,9 @@ def main(argv=None):
     p.add_argument("--config", default=os.path.join(HERE, "config.toml"))
     p.add_argument("--log", help="path to Job_Search_Log.xlsx (default: log_path in config.toml)")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--delete", action="store_true",
+                   help="delete the rows instead of marking them Screened out "
+                        "(also deletes rows an earlier prune marked)")
     args = p.parse_args(argv)
 
     cfg = load_config(args.config)
@@ -56,10 +61,20 @@ def main(argv=None):
     categories = {c["name"]: c for c in cfg["categories"]}
     categories["Engineering"] = categories.get("Software Engineering")
 
-    rows = [r for r in read_rows(log_path)
+    all_rows = read_rows(log_path)
+    rows = [r for r in all_rows
             if str(r["Found Via (website)"]).startswith("Job tracker")
             and r["Applied?"] != "Yes" and r["Status"] in (NEW_STATUS, "")]
     updates, by_reason = [], {}
+    if args.delete:
+        # Rows an earlier prune already marked are deleted as well.
+        for r in all_rows:
+            if (r["Status"] == "Screened out" and r["Applied?"] != "Yes"
+                    and "Screened out by filter:" in (r["Notes"] or "")
+                    and str(r["Found Via (website)"]).startswith("Job tracker")):
+                reason = r["Notes"].split("Screened out by filter:")[-1].strip()
+                updates.append((r["_row"], None))
+                by_reason.setdefault(reason, []).append(f"{r['Employer']} – {r['Role']}")
     for r in rows:
         m = SEARCH.match(r["Notes"] or "")
         category = categories.get(m.group(1)) if m else None
@@ -71,16 +86,22 @@ def main(argv=None):
             updates.append((r["_row"], {"Status": "Screened out", "Notes": f"{r['Notes']} · {note}"}))
             by_reason.setdefault(reason, []).append(f"{r['Employer']} – {r['Role']}")
 
-    print(f"Checked {len(rows)} untouched job(s) added by the tracker.")
-    print(f"{len(updates)} {'would be ' if args.dry_run else ''}screened out, "
-          f"{len(rows) - len(updates)} still fit.\n")
+    action = "deleted" if args.delete else "screened out"
+    fails = sum(1 for r, _ in updates if r in {x["_row"] for x in rows})
+    print(f"Checked {len(rows)} untouched job(s) added by the tracker: {len(rows) - fails} still fit.")
+    print(f"{len(updates)} {'would be ' if args.dry_run else ''}{action}.\n")
     for reason, jobs in sorted(by_reason.items(), key=lambda kv: -len(kv[1])):
         print(f"  {reason} ({len(jobs)}):")
         for j in jobs:
             print(f"    ✗ {j}")
     if updates and not args.dry_run:
-        write_changes(log_path, updates)
-        print(f"\nMarked {len(updates)} row(s) Screened out. Previous version saved as {log_path}.bak")
+        if args.delete:
+            write_changes(log_path, delete_rows=[r for r, _ in updates])
+            print(f"\nDeleted {len(updates)} row(s). Previous version saved as {log_path}.bak")
+            print("Run a sync (\"sync my job tracker\") to delete them from the page too.")
+        else:
+            write_changes(log_path, updates)
+            print(f"\nMarked {len(updates)} row(s) Screened out. Previous version saved as {log_path}.bak")
 
 
 if __name__ == "__main__":

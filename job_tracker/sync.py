@@ -131,13 +131,29 @@ def plan(log_path, page_dir, writes_path, dry_run=False):
                 page[alt] = page.pop(k)
 
     xlsx_updates, xlsx_new, page_writes, conflicts, merged = [], [], [], [], {}
+    xlsx_deletes = []
     used_ids = {doc_id for _, doc_id in page.values()}
+    unchanged = lambda rec, b: all(rec.get(f, "") == b.get(f, "") for f in SYNCED)
 
     for k in sorted(set(xlsx) | set(page)):
         x, p, b = xlsx.get(k), page.get(k), base.get(k)
-        if x and not p:
-            if b:  # was synced before, then deleted on the page: leave it
+        if x and not p and b:
+            # Synced before, now deleted on the page.
+            if unchanged(x[0], b):
+                xlsx_deletes.append((x[1], x[0]))
                 continue
+            conflicts.append(f"{x[0]['employer']} – {x[0]['role']}: deleted on the page but "
+                             f"edited in the spreadsheet; kept and put back on the page")
+        if p and not x and b:
+            # Synced before, now deleted from the spreadsheet.
+            if unchanged(p[0], b):
+                page_writes.append({"op": "delete", "collection": "jobs", "doc_id": p[1],
+                                    "if_version": "FILL_IN_FROM_LISTING",
+                                    "_label": f"{p[0]['employer']} – {p[0]['role']}"})
+                continue
+            conflicts.append(f"{p[0]['employer']} – {p[0]['role']}: deleted from the spreadsheet "
+                             f"but edited on the page; kept and put back in the spreadsheet")
+        if x and not p:
             rec = x[0]
             doc_id = _slug(("swe " if rec["track"] == SWE else "") + f"{rec['employer']} {rec['role']}")
             while doc_id in used_ids:
@@ -147,8 +163,6 @@ def plan(log_path, page_dir, writes_path, dry_run=False):
             merged[k] = rec
             continue
         if p and not x:
-            if b:  # deleted from the spreadsheet after a sync: leave it
-                continue
             xlsx_new.append(to_xlsx(p[0]))
             merged[k] = p[0]
             continue
@@ -181,16 +195,21 @@ def plan(log_path, page_dir, writes_path, dry_run=False):
 
     # Report
     print(f"Spreadsheet: {len(xlsx)} jobs · Page: {len(page)} jobs")
-    print(f"  spreadsheet: {len(xlsx_new)} to add, {len(xlsx_updates)} to update")
+    print(f"  spreadsheet: {len(xlsx_new)} to add, {len(xlsx_updates)} to update, "
+          f"{len(xlsx_deletes)} to delete")
     print(f"  page:        {sum(w['op'] == 'set' for w in page_writes)} to add, "
-          f"{sum(w['op'] == 'update' for w in page_writes)} to update")
+          f"{sum(w['op'] == 'update' for w in page_writes)} to update, "
+          f"{sum(w['op'] == 'delete' for w in page_writes)} to delete")
+    for _, rec in xlsx_deletes:
+        print(f"    - spreadsheet: {rec['employer']} – {rec['role']}")
     for row in xlsx_new:
         print(f"    + spreadsheet: {row['Employer']} – {row['Role']}")
     for r, fields in xlsx_updates:
         print(f"    ~ spreadsheet row {r}: " + ", ".join(f"{c} → {v!r}" for c, v in fields.items()))
     for w in page_writes:
-        sign = "+" if w["op"] == "set" else "~"
+        sign = {"set": "+", "update": "~", "delete": "-"}[w["op"]]
         what = (f"{w['data']['employer']} – {w['data']['role']}" if w["op"] == "set"
+                else w["_label"] if w["op"] == "delete"
                 else ", ".join(f"{f} → {v!r}" for f, v in w["data"].items() if f != "updatedAt"))
         print(f"    {sign} page {w['doc_id']}: {what}")
     for c in conflicts:
@@ -199,9 +218,11 @@ def plan(log_path, page_dir, writes_path, dry_run=False):
     if dry_run:
         return page_writes
     statuses = {to_xlsx(r)["Status"] for r in merged.values()}
-    write_changes(log_path, xlsx_updates, xlsx_new, extra_statuses=sorted(statuses))
+    write_changes(log_path, xlsx_updates, xlsx_new, extra_statuses=sorted(statuses),
+                  delete_rows=[r for r, _ in xlsx_deletes])
     with open(writes_path, "w") as f:
-        json.dump(page_writes, f, indent=2, ensure_ascii=False)
+        json.dump([{k: v for k, v in w.items() if not k.startswith("_")} for w in page_writes],
+                  f, indent=2, ensure_ascii=False)
     with open(pending_path, "w") as f:
         json.dump(merged, f, indent=2, ensure_ascii=False)
     print(f"\nSpreadsheet updated. Page writes saved to {writes_path} "

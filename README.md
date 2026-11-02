@@ -50,6 +50,7 @@ Then type one of these:
 | `sync my job tracker` | Only syncs the spreadsheet and the page |
 | `check which jobs are still open and sync my job tracker` | Re-checks open leads, then syncs |
 | `prune my job list and sync my job tracker` | Screens out old rows that no longer fit your filters, then syncs |
+| `delete jobs that don't fit and sync my job tracker` | Deletes those rows instead, from both the spreadsheet and the page |
 
 **By hand, without Claude:**
 
@@ -116,7 +117,16 @@ python3 prune.py --dry-run   # list the jobs that no longer fit, grouped by reas
 python3 prune.py             # mark them "Screened out", with the reason in Notes
 ```
 
-It only touches rows the tracker added that you haven't changed yet (Applied? = No and Status = "Unverified – check employer site"). Nothing is deleted. Run a sync afterwards so the page hides them too.
+To **delete** them instead:
+
+```bash
+python3 prune.py --delete --dry-run   # list what would be deleted
+python3 prune.py --delete             # delete them (also deletes rows an earlier prune marked)
+```
+
+It only touches rows the tracker added that you haven't changed yet (Applied? = No and Status = "Unverified – check employer site"). Jobs you logged yourself, or applied to, are never deleted. The previous file is saved as `Job_Search_Log.xlsx.bak`.
+
+Run a sync afterwards ("sync my job tracker"). Deleted rows are then deleted from the page too, unless the job was edited on the page since the last sync. In that case it's kept, and Claude tells you.
 
 ---
 
