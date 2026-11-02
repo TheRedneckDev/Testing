@@ -11,7 +11,11 @@ Anything else, including sites that block the check or time out, is
 from __future__ import annotations
 
 import re
+import threading
+import time
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse
 
 import requests
 
@@ -37,18 +41,37 @@ GONE_PHRASES = [
 GONE_URL = re.compile(r"[?&]error=true|/404\b|/not[-_]found|/job-not-found|/expired", re.I)
 
 
+def _fetch(url, session):
+    """GET with retries when a site rate-limits us (HTTP 429)."""
+    for attempt in range(3):
+        resp = session.get(url, headers=HEADERS, timeout=TIMEOUT, allow_redirects=True, stream=True)
+        if resp.status_code != 429 or attempt == 2:
+            return resp
+        resp.close()
+        try:
+            wait = min(float(resp.headers.get("Retry-After", "")), 30)
+        except ValueError:
+            wait = 5 * (attempt + 1)
+        time.sleep(wait)
+    return resp
+
+
 def check_url(url, session=None):
     """Return ("active" | "gone" | "unknown", reason)."""
     if not url:
         return "unknown", "no link"
     s = session or requests
     try:
-        resp = s.get(url, headers=HEADERS, timeout=TIMEOUT, allow_redirects=True, stream=True)
+        resp = _fetch(url, s)
         try:
             if resp.status_code in (404, 410):
                 return "gone", f"page returns {resp.status_code}"
             if GONE_URL.search(resp.url) and not GONE_URL.search(url):
                 return "gone", "redirects to an error page"
+            if resp.status_code in (401, 403):
+                return "unknown", "site blocks automated checks"
+            if resp.status_code == 429:
+                return "unknown", "site rate-limited the check"
             if resp.status_code >= 400:
                 return "unknown", f"site answered {resp.status_code}"
             body = b""
@@ -67,9 +90,26 @@ def check_url(url, session=None):
         return "unknown", f"couldn't reach ({type(e).__name__})"
 
 
-def check_many(urls, workers=8):
-    """Check links in parallel. Returns {url: (status, reason)}."""
+def host(url):
+    h = urlparse(url or "").netloc.lower()
+    return h[4:] if h.startswith("www.") else h
+
+
+def check_many(urls, workers=8, per_host=2):
+    """Check links in parallel, at most per_host at a time for any one site.
+
+    Returns {url: (status, reason)}.
+    """
     urls = list(dict.fromkeys(u for u in urls if u))
+    limits = defaultdict(lambda: threading.Semaphore(per_host))
+    lock = threading.Lock()
+
+    def one(u, session):
+        with lock:
+            sem = limits[host(u)]
+        with sem:
+            return check_url(u, session)
+
     with requests.Session() as session, ThreadPoolExecutor(workers) as pool:
-        results = pool.map(lambda u: check_url(u, session), urls)
+        results = pool.map(lambda u: one(u, session), urls)
         return dict(zip(urls, results))

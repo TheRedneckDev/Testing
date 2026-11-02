@@ -102,7 +102,10 @@ python3 track.py --log ~/Desktop/Test_Log.xlsx --dry-run
 ```bash
 python3 check_links.py --dry-run   # list open leads whose postings are gone
 python3 check_links.py             # mark them Closed, with a dated note
+python3 check_links.py --dry-run --verbose   # also list every job that couldn't be checked
 ```
+
+Some sites, Jooble especially, block automated checks. Those are grouped under "Couldn't check", so open them by hand if one interests you.
 
 It only checks rows not yet applied to. Rows you've applied to are never changed.
 

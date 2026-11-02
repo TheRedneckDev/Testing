@@ -67,7 +67,7 @@ title_include = ["technical support", "tech support", "customer support", "custo
                  "support engineer", "support analyst", "support associate",
                  "member support", "client support", "call center"]
 title_exclude = ["lead", "manager", "director", "supervisor", "head of", "vp", "vice president",
-                 "team lead"]
+                 "team lead", "bilingual", "product engineer"]
 muse_categories = ["Customer Service"]
 wwr_categories = ["remote-customer-support-jobs"]
 muse_locations = ["Flexible / Remote"]
@@ -96,7 +96,9 @@ title_exclude = ["lead", "tech lead", "team lead", "manager", "director", "head 
                  "vp", "vice president", "intern", "principal", "staff", "architect",
                  # "Programmer" titles that aren't software development:
                  "cmm", "cnc", "edm", "plc", "metrology", "machinist", "sas programmer",
-                 "statistical programmer", "bas programmer", "clinical programmer"]
+                 "statistical programmer", "bas programmer", "clinical programmer",
+                 "clinical", "sdtm", "database programmer", "systems programmer",
+                 "producer", "data scientist", "bilingual"]
 # Résumé-based filtering (see filters.skills_check). A job is dropped when its
 # title names an avoid_skills stack and none of my_skills, when its description
 # is about an avoid_skills stack with none of my_skills, or when a full
