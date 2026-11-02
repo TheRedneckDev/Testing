@@ -97,23 +97,32 @@ def location_status(job, category):
     return False, ""
 
 
-def match(job, category, settings, today=None):
-    """Return an annotated copy of job if it fits the category, else None."""
+def check(job, category, settings, today=None, check_location=True):
+    """Apply the category's filters. Returns (reason, texas, skills).
+
+    reason is None when the job passes, otherwise a short explanation of why
+    it doesn't fit (used by prune.py to label old rows).
+    """
     title = job["title"]
     if not title or not job["company"]:
-        return None
+        return "missing title or company", "", []
     if not _any(category["title_include"], title):
-        return None
-    if _any(category.get("title_exclude", []), title):
-        return None
+        return "title doesn't match this search", "", []
+    excluded = _found(category.get("title_exclude", []), title)
+    if excluded:
+        return f'title has "{excluded[0]}"', "", []
 
-    ok, texas = location_status(job, category)
-    if not ok:
-        return None
+    texas = ""
+    if check_location:
+        ok, texas = location_status(job, category)
+        if not ok:
+            return "not remote and not near Austin", "", []
 
     keep, skills = skills_check(job, category)
     if not keep:
-        return None
+        stacks = _found(category.get("avoid_skills", []), title + " " + job.get("description", ""))
+        return (f"needs {', '.join(stacks[:3])}, not on your résumé" if stacks
+                else "doesn't mention any of your skills"), "", []
 
     # Pay cutoff: drop jobs whose pay range goes above salary_max.
     salary_max = category.get("salary_max")
@@ -122,16 +131,24 @@ def match(job, category, settings, today=None):
         if pay:
             top_or_bottom = max(pay) if category.get("salary_cutoff", "top") == "top" else min(pay)
             if top_or_bottom > salary_max:
-                return None
+                return f"pay above ${salary_max / 1000:,.0f}k", "", []
 
     max_age = settings.get("max_days_old")
-    if max_age and job["posted"]:
+    if max_age and job.get("posted"):
         try:
             posted = date.fromisoformat(job["posted"])
             if posted < (today or date.today()) - timedelta(days=max_age):
-                return None
+                return f"posted more than {max_age} days ago", "", []
         except ValueError:
             pass
+    return None, texas, skills
+
+
+def match(job, category, settings, today=None):
+    """Return an annotated copy of job if it fits the category, else None."""
+    reason, texas, skills = check(job, category, settings, today)
+    if reason:
+        return None
 
     notes = [f"{category['name']} search", f"Location: {job['location'] or 'not stated'}"]
     if skills:

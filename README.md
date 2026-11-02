@@ -49,6 +49,7 @@ Then type one of these:
 | `find new jobs and sync my job tracker` | Searches, checks links, then syncs the spreadsheet and the page |
 | `sync my job tracker` | Only syncs the spreadsheet and the page |
 | `check which jobs are still open and sync my job tracker` | Re-checks open leads, then syncs |
+| `prune my job list and sync my job tracker` | Screens out old rows that no longer fit your filters, then syncs |
 
 **By hand, without Claude:**
 
@@ -56,7 +57,8 @@ Then type one of these:
 python3 track.py --dry-run        # 1. preview what's new (changes nothing)
 python3 track.py                  # 2. add the new jobs to the spreadsheet
 python3 check_links.py            # 3. mark open leads whose postings closed
-open ~/Downloads/JobStuff/Job_Search_Log.xlsx   # 4. look at the results
+python3 prune.py                  # 4. (after changing filters) screen out old rows that no longer fit
+open ~/Downloads/JobStuff/Job_Search_Log.xlsx   # 5. look at the results
 ```
 
 ---
@@ -102,6 +104,19 @@ python3 check_links.py             # mark them Closed, with a dated note
 ```
 
 It only checks rows not yet applied to. Rows you've applied to are never changed.
+
+---
+
+## Cleaning up after changing filters: `prune.py`
+
+New filters only apply to jobs found from then on. To re-apply them to jobs the tracker already added:
+
+```bash
+python3 prune.py --dry-run   # list the jobs that no longer fit, grouped by reason
+python3 prune.py             # mark them "Screened out", with the reason in Notes
+```
+
+It only touches rows the tracker added that you haven't changed yet (Applied? = No and Status = "Unverified – check employer site"). Nothing is deleted. Run a sync afterwards so the page hides them too.
 
 ---
 
@@ -159,7 +174,7 @@ open -e config.toml
 | Employers to watch directly | `[settings.companies]` |
 | Nearby towns counted as local | `local_terms` |
 
-After editing, preview with `python3 track.py --dry-run`.
+After editing, preview with `python3 track.py --dry-run`, then run `python3 prune.py --dry-run` to see which existing rows the change would screen out.
 
 ---
 
