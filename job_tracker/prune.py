@@ -29,7 +29,6 @@ from spreadsheet import NEW_STATUS, read_rows, write_changes
 from track import load_config
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SEARCH = re.compile(r"^\s*(Support|Software Engineering|Engineering) search\b")
 LOCATION = re.compile(r"Location: ([^·]*)")
 
 
@@ -59,7 +58,10 @@ def main(argv=None):
     if not os.path.exists(log_path):
         sys.exit(f"Job log not found: {log_path}")
     categories = {c["name"]: c for c in cfg["categories"]}
-    categories["Engineering"] = categories.get("Software Engineering")
+    if "Software Engineering" in categories:  # older rows used the short name
+        categories["Engineering"] = categories["Software Engineering"]
+    names = sorted(categories, key=len, reverse=True)
+    SEARCH = re.compile(r"^\s*(" + "|".join(map(re.escape, names)) + r") search\b")
 
     all_rows = read_rows(log_path)
     rows = [r for r in all_rows

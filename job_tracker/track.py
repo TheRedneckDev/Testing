@@ -23,7 +23,7 @@ import requests
 from filters import match
 from linkcheck import check_many
 from sources import SOURCES, SkipSource
-from spreadsheet import NEW_STATUS, _norm_url, append_jobs, existing_keys, job_key
+from spreadsheet import NEW_STATUS, _norm_url, append_jobs, create_blank, existing_keys, job_key
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -90,7 +90,11 @@ def main(argv=None):
     cfg = load_config(args.config)
     log_path = os.path.expanduser(args.log or cfg["log_path"])
     if not os.path.exists(log_path):
-        sys.exit(f"Job log not found: {log_path}\nPass --log or set log_path in {args.config}")
+        if args.dry_run:
+            sys.exit(f"Job log not found: {log_path}\n"
+                     f"Run once without --dry-run to create it, or fix log_path in {args.config}")
+        create_blank(log_path)
+        print(f"Created a new, empty job log: {log_path}")
 
     print(f"Searching ({'dry run' if args.dry_run else 'will update ' + log_path})...")
     sources = args.sources.split(",") if args.sources else None

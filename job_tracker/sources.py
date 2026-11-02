@@ -398,6 +398,8 @@ def adzuna(category, settings):
                   "max_days_old": settings["max_days_old"]}
         if category.get("search_location"):
             params["where"] = category["search_location"]
+            if category.get("search_radius_km"):
+                params["distance"] = category["search_radius_km"]
         data = _get(f"https://api.adzuna.com/v1/api/jobs/{country}/search/1", params=params)
         for j in data.get("results", []):
             jobs.append(make_job(

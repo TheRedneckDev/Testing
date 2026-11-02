@@ -1,0 +1,89 @@
+# Job tracker settings for Elizabeth.
+#
+# Use with any command by adding --config config-elizabeth.toml, e.g.
+#   python3 track.py --config config-elizabeth.toml --dry-run
+#
+# Her log is created automatically the first time track.py runs (without --dry-run).
+log_path = "~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx"
+
+[settings]
+max_results_per_source = 50
+max_pages = 3
+max_days_old = 30
+adzuna_country = "us"
+
+# Adzuna, Jooble and USAJobs use the same API keys as Julian's searches and are
+# the best sources for local (Pflugerville / Austin area) jobs. The remote boards
+# mostly carry remote customer support jobs.
+sources = ["remotive", "remoteok", "themuse", "jobicy", "himalayas", "weworkremotely",
+           "workingnomads", "adzuna", "jooble", "usajobs"]
+
+[settings.companies]
+greenhouse = []
+lever = []
+ashby = []
+
+[locations]
+# Places within ~20 miles of Pflugerville (78660). On-site jobs elsewhere are skipped.
+local_terms = ["Pflugerville", "Austin", "Round Rock", "Hutto", "Georgetown", "Cedar Park",
+               "Leander", "Manor", "Taylor", "Wells Branch", "Jollyville", "Brushy Creek"]
+texas_terms = ["Texas", "TX"]
+us_terms = ["US", "USA", "U.S.", "United States", "America", "Americas", "North America",
+            "Anywhere", "Worldwide"]
+
+# ---------------------------------------------------------------------------
+# Search 1: Customer support (non-technical, no sales)
+# Remote preferred; on-site within ~20 miles of Pflugerville also OK.
+# ---------------------------------------------------------------------------
+[[categories]]
+name = "Customer Support"
+remote_only = false
+search_keywords = ["customer service", "customer support", "client services",
+                   "guest services", "member services", "patient services"]
+title_include = ["customer service", "customer support", "customer care", "customer experience",
+                 "client service", "client services", "client support", "client care",
+                 "guest services", "guest relations", "member services", "member support",
+                 "patient services", "patient access", "patient coordinator",
+                 "customer success associate", "support representative", "support specialist",
+                 "support associate", "service representative", "call center", "concierge"]
+# No sales, and nothing technical (IT help desk, engineering).
+title_exclude = ["sales", "account executive", "account manager", "business development",
+                 "inside sales", "outbound", "retention", "commission", "loan officer",
+                 "insurance agent", "technical", "tech support", "it support", "help desk",
+                 "helpdesk", "engineer", "developer", "tier 2", "tier ii", "tier 3",
+                 "director", "vp", "vice president", "head of", "bilingual"]
+# Skip jobs whose description is really a sales job.
+description_exclude = ["cold call", "cold calls", "cold calling", "sales quota", "sales quotas",
+                       "sales targets", "commission only", "commission-only", "outbound sales",
+                       "door to door", "door-to-door"]
+salary_min = 20800            # $10/hr x 2080 hours a year
+muse_categories = ["Customer Service"]
+muse_locations = ["Flexible / Remote", "Austin, TX"]
+wwr_categories = ["remote-customer-support-jobs"]
+search_location = "Pflugerville, TX"
+search_radius_km = 32         # ~20 miles (Adzuna)
+
+# ---------------------------------------------------------------------------
+# Search 2: Receptionist / front desk (incl. salon & spa, virtual receptionist)
+# ---------------------------------------------------------------------------
+[[categories]]
+name = "Receptionist"
+remote_only = false
+search_keywords = ["receptionist", "front desk", "virtual receptionist", "salon coordinator",
+                   "spa front desk", "front office"]
+title_include = ["receptionist", "front desk", "front office", "virtual receptionist",
+                 "salon coordinator", "salon front desk", "spa coordinator", "spa concierge",
+                 "office assistant", "scheduling coordinator", "appointment coordinator",
+                 "appointment scheduler", "patient scheduler", "check-in", "greeter"]
+title_exclude = ["sales", "account executive", "business development", "director", "vp",
+                 "vice president", "bilingual", "dental assistant", "medical assistant",
+                 "nurse", "lpn", "rn", "pharmacy"]
+description_exclude = ["cold call", "cold calls", "cold calling", "sales quota", "sales quotas",
+                       "sales targets", "commission only", "commission-only", "outbound sales",
+                       "door to door", "door-to-door"]
+salary_min = 20800
+muse_categories = ["Administration and Office"]
+muse_locations = ["Flexible / Remote", "Austin, TX"]
+wwr_categories = []
+search_location = "Pflugerville, TX"
+search_radius_km = 32

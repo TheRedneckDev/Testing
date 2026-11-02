@@ -64,6 +64,31 @@ open ~/JobTracker/JobStuff/Job_Search_Log.xlsx   # 5. look at the results
 
 ---
 
+## Elizabeth's job search
+
+Elizabeth's settings are in `job_tracker/config-elizabeth.toml`:
+
+- **Searches:** Customer Support (non-technical) and Receptionist / front desk, including salon and spa front desk and virtual receptionist roles.
+- **Location:** remote anywhere in the U.S., or on-site within about 20 miles of Pflugerville.
+- **Pay:** $10/hr or more.
+- **No sales:** sales titles and jobs whose description mentions cold calling, sales quotas or commission-only pay are skipped.
+
+Her spreadsheet is `~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx`. It's created automatically the first time `track.py` runs without `--dry-run`, in the same layout as Julian's.
+
+Every command works for her by adding `--config config-elizabeth.toml`:
+
+```bash
+python3 track.py --config config-elizabeth.toml --dry-run    # preview new jobs
+python3 track.py --config config-elizabeth.toml              # add them (creates her log the first time)
+python3 check_links.py --config config-elizabeth.toml        # close postings that are gone
+python3 prune.py --config config-elizabeth.toml --delete     # delete jobs that no longer fit
+open ~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx          # look at her list
+```
+
+Her searches use the same API keys (Adzuna, Jooble, USAJobs). Adzuna and Jooble are the main sources for local Pflugerville and Austin jobs, so make sure those keys are set. Her list isn't synced to a Job Tracker page; it's only a spreadsheet.
+
+---
+
 ## Searching: `track.py`
 
 ```bash

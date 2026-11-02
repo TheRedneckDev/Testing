@@ -14,7 +14,10 @@ import shutil
 from copy import copy
 from datetime import date
 
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Alignment, PatternFill
+from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.styles import Font
 
 SHEET = "Job Log"
@@ -232,3 +235,52 @@ def append_jobs(path, jobs, today=None, backup=True):
         added.append(to_row(job, today))
     write_changes(path, new_rows=added, backup=backup)
     return added
+
+
+STATUSES = ["Shortlisted", NEW_STATUS, "In progress", "Submitted – awaiting response",
+            "Interview", "Offer", "Rejected", "Closed", "Screened out"]
+WIDTHS = [12, 22, 34, 18, 28, 16, 26, 40, 10, 12, 24, 40]
+
+
+def create_blank(path):
+    """Create an empty job log in the same layout as Job_Search_Log.xlsx:
+    a "Job Log" sheet with the JobLog table and Applied?/Status dropdowns,
+    and a "Summary" sheet with live counts."""
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = SHEET
+    ws.append(HEADERS)
+    ws.append([None] * len(HEADERS))  # tables need at least one data row
+    for i, w in enumerate(WIDTHS, start=1):
+        ws.column_dimensions[ws.cell(1, i).column_letter].width = w
+        ws.cell(1, i).font = Font(bold=True, color="FFFFFF")
+        ws.cell(1, i).fill = PatternFill("solid", fgColor="1F4E78")
+        ws.cell(2, i).alignment = Alignment(wrap_text=True, vertical="top")
+    ws.freeze_panes = "C2"
+    table = Table(displayName="JobLog", ref="A1:L2")
+    table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
+    ws.add_table(table)
+    applied = DataValidation(type="list", formula1='"Yes,No"', allow_blank=True)
+    status = DataValidation(type="list", formula1='"' + ",".join(STATUSES) + '"', allow_blank=True)
+    ws.add_data_validation(applied)
+    ws.add_data_validation(status)
+    applied.add("I2:I500")
+    status.add("K2:K500")
+
+    sm = wb.create_sheet("Summary")
+    sm["A1"] = "Summary"
+    sm["A1"].font = Font(bold=True, size=14)
+    rows = [
+        ("Jobs logged", "=COUNTA('Job Log'!B2:B500)"),
+        ("Applied", "=COUNTIF('Job Log'!I2:I500,\"Yes\")"),
+        ("Not yet applied", "=COUNTIF('Job Log'!I2:I500,\"No\")"),
+        ("Shortlisted (not applied)", "=COUNTIFS('Job Log'!K2:K500,\"Shortlisted\",'Job Log'!I2:I500,\"No\")"),
+        ("Closed / screened out", "=COUNTIF('Job Log'!K2:K500,\"Closed\")+COUNTIF('Job Log'!K2:K500,\"Screened out\")"),
+    ]
+    for i, (label, formula) in enumerate(rows, start=3):
+        sm.cell(i, 1, label)
+        sm.cell(i, 2, formula)
+    sm.column_dimensions["A"].width = 28
+    sm["A9"] = "Add one row per job on the Job Log tab. Use the Applied? and Status dropdowns; counts here update automatically."
+    wb.save(path)

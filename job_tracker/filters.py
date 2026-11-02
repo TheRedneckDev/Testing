@@ -90,7 +90,10 @@ def location_status(job, category):
         return False, ""
     if _any(category.get("texas_terms", []), loc):
         return True, "Listed (Texas location) – verify"
-    if not loc.strip():
+    # "Remote", "100% Remote", "Remote - Work from home" etc. name no country.
+    rest = re.sub(r"\b(remote|fully|work from home|wfh|home based|home-based|anywhere)\b|100%|[-–,/()|]",
+                  " ", loc).strip()
+    if not rest:
         return True, "Unknown – verify"
     if _any(category.get("us_terms", []), loc):
         return True, "Likely (U.S. remote) – verify"
@@ -116,7 +119,10 @@ def check(job, category, settings, today=None, check_location=True):
     if check_location:
         ok, texas = location_status(job, category)
         if not ok:
-            return "not remote and not near Austin", "", []
+            loc = f"{job['location']} {job['title']}".lower()
+            if job["remote"] is True or "remote" in loc:
+                return "remote, but not open to U.S. workers", "", []
+            return "on-site, and not near home", "", []
 
     keep, skills = skills_check(job, category)
     if not keep:
@@ -124,14 +130,21 @@ def check(job, category, settings, today=None, check_location=True):
         return (f"needs {', '.join(stacks[:3])}, not on your résumé" if stacks
                 else "doesn't mention any of your skills"), "", []
 
-    # Pay cutoff: drop jobs whose pay range goes above salary_max.
-    salary_max = category.get("salary_max")
-    if salary_max and job["salary"]:
+    desc_bad = _found(category.get("description_exclude", []), job.get("description", ""))
+    if desc_bad:
+        return f'description mentions "{desc_bad[0]}"', "", []
+
+    # Pay limits. salary_max: drop jobs whose pay range goes above it.
+    # salary_min: drop jobs whose best pay is below it.
+    salary_max, salary_min = category.get("salary_max"), category.get("salary_min")
+    if (salary_max or salary_min) and job["salary"]:
         pay = annual_pay(job["salary"])
         if pay:
             top_or_bottom = max(pay) if category.get("salary_cutoff", "top") == "top" else min(pay)
-            if top_or_bottom > salary_max:
+            if salary_max and top_or_bottom > salary_max:
                 return f"pay above ${salary_max / 1000:,.0f}k", "", []
+            if salary_min and max(pay) < salary_min:
+                return f"pay below ${salary_min / 2080:,.2f}/hr", "", []
 
     max_age = settings.get("max_days_old")
     if max_age and job.get("posted"):

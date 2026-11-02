@@ -34,11 +34,13 @@ def main(argv=None):
     except ModuleNotFoundError:  # Python 3.8-3.10
         import tomli as tomllib
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--log", help="path to Job_Search_Log.xlsx (default: log_path in config.toml)")
+    p.add_argument("--config", default=os.path.join(HERE, "config.toml"),
+                   help="settings file (e.g. config-elizabeth.toml)")
+    p.add_argument("--log", help="path to Job_Search_Log.xlsx (default: log_path in the config)")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--verbose", action="store_true", help="list every job that couldn't be checked")
     args = p.parse_args(argv)
-    with open(os.path.join(HERE, "config.toml"), "rb") as f:
+    with open(args.config, "rb") as f:
         log_path = os.path.expanduser(args.log or tomllib.load(f)["log_path"])
     if not os.path.exists(log_path):
         sys.exit(f"Job log not found: {log_path}")
