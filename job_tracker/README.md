@@ -27,7 +27,7 @@ cd job_tracker
 pip3 install -r requirements.txt
 ```
 
-By default the tracker uses `~/Downloads/JobStuff/Job_Search_Log.xlsx`. Change `log_path` in
+By default the tracker uses `~/JobTracker/JobStuff/Job_Search_Log.xlsx`. Change `log_path` in
 `config.toml`, or pass `--log`.
 
 ## Run

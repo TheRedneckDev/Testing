@@ -1,7 +1,7 @@
 # Job tracker configuration.
 #
 # Path to your existing job log. Can be overridden with --log.
-log_path = "~/Downloads/JobStuff/Job_Search_Log.xlsx"
+log_path = "~/JobTracker/JobStuff/Job_Search_Log.xlsx"
 
 [settings]
 max_results_per_source = 50   # per keyword, for sources that search by keyword

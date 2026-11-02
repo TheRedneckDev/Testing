@@ -7,7 +7,7 @@ description: Search for new jobs and two-way sync Julian's Job_Search_Log.xlsx w
 
 The job log exists in two places that must stay in sync:
 
-- **Spreadsheet:** `~/Downloads/JobStuff/Job_Search_Log.xlsx` (`log_path` in `job_tracker/config.toml`)
+- **Spreadsheet:** `~/JobTracker/JobStuff/Job_Search_Log.xlsx` (`log_path` in `job_tracker/config.toml`)
 - **Page:** https://claude.ai/artifact/SXzbUitgGK2Q5jWACxrAct, `jobs` collection, read and written with the `ArtifactData` tool
 
 Run everything from `job_tracker/`. Ask the user to close the spreadsheet in Excel first.

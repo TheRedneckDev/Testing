@@ -1,6 +1,6 @@
 # Job tracker: command cheat sheet
 
-Searches job sites for two searches and adds new matches to `~/Downloads/JobStuff/Job_Search_Log.xlsx`:
+Searches job sites for two searches and adds new matches to `~/JobTracker/JobStuff/Job_Search_Log.xlsx`:
 
 - **Support:** remote tech support and customer service jobs.
 - **Software Engineering:** Java/full-stack, QA and Sales Engineer roles, either remote or near Austin.
@@ -59,7 +59,7 @@ python3 track.py --dry-run        # 1. preview what's new (changes nothing)
 python3 track.py                  # 2. add the new jobs to the spreadsheet
 python3 check_links.py            # 3. mark open leads whose postings closed
 python3 prune.py                  # 4. (after changing filters) screen out old rows that no longer fit
-open ~/Downloads/JobStuff/Job_Search_Log.xlsx   # 5. look at the results
+open ~/JobTracker/JobStuff/Job_Search_Log.xlsx   # 5. look at the results
 ```
 
 ---
