@@ -122,6 +122,8 @@ def check(job, category, settings, today=None, check_location=True):
             loc = f"{job['location']} {job['title']}".lower()
             if job["remote"] is True or "remote" in loc:
                 return "remote, but not open to U.S. workers", "", []
+            if category.get("remote_only"):
+                return "on-site (this search is work-from-home only)", "", []
             return "on-site, and not near home", "", []
 
     keep, skills = skills_check(job, category)

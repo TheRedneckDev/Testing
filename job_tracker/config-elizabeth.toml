@@ -87,3 +87,58 @@ muse_locations = ["Flexible / Remote", "Austin, TX"]
 wwr_categories = []
 search_location = "Pflugerville, TX"
 search_radius_km = 32
+
+# ---------------------------------------------------------------------------
+# Search 3: Work from home (remote only)
+# At-home roles that fit her background: virtual reception, scheduling,
+# admin/data entry, chat & email support, reservations, beauty-brand client care.
+# ---------------------------------------------------------------------------
+[[categories]]
+name = "Work From Home"
+remote_only = true
+search_keywords = ["virtual receptionist", "remote receptionist", "remote scheduler",
+                   "patient scheduler", "virtual assistant", "remote administrative assistant",
+                   "data entry", "chat support", "reservation agent", "answering service"]
+title_include = [
+    # Virtual reception
+    "virtual receptionist", "remote receptionist", "receptionist", "answering service",
+    "call answering", "telephone operator",
+    # Scheduling
+    "scheduler", "scheduling coordinator", "scheduling specialist", "patient scheduler",
+    "appointment coordinator", "booking coordinator", "booking specialist",
+    "intake coordinator", "intake specialist", "patient access", "patient coordinator",
+    # Admin
+    "virtual assistant", "administrative assistant", "admin assistant", "office assistant",
+    "order processing", "order entry", "data entry",
+    # Chat / email / phone support (non-technical)
+    "chat support", "live chat", "chat agent", "email support", "customer care",
+    "customer service", "customer support", "member services", "client services",
+    "client care", "guest services", "customer experience associate",
+    # Reservations
+    "reservation agent", "reservations agent", "reservations specialist", "reservationist",
+]
+title_exclude = [
+    # Sales in disguise
+    "sales", "appointment setter", "lead generation", "lead generator", "telemarketing",
+    "account executive", "account manager", "business development", "commission",
+    "beauty advisor", "beauty consultant", "retention", "outbound", "insurance agent",
+    # Usually not real jobs
+    "mystery shopper", "survey", "focus group",
+    # Technical / clinical / senior
+    "technical", "tech support", "it support", "help desk", "helpdesk", "engineer",
+    "developer", "medical assistant", "dental assistant", "nurse", "coder", "billing",
+    "director", "vp", "vice president", "head of", "bilingual", "executive assistant",
+]
+# Sales jobs and common work-from-home scams.
+description_exclude = [
+    "cold call", "cold calls", "cold calling", "sales quota", "sales quotas", "sales targets",
+    "commission only", "commission-only", "outbound sales", "door to door", "door-to-door",
+    "starter kit", "purchase equipment", "buy equipment", "deposit the check", "deposit a check",
+    "unlimited earning potential", "be your own boss", "no interview", "processing fee",
+    "training fee", "registration fee",
+]
+salary_min = 20800
+muse_categories = ["Customer Service", "Administration and Office"]
+muse_locations = ["Flexible / Remote"]
+wwr_categories = ["remote-customer-support-jobs"]
+search_location = ""

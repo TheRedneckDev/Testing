@@ -4,7 +4,7 @@ Searches job sites and adds new matches to a job-log spreadsheet. It has two pro
 
 | | Julian | Elizabeth |
 |---|---|---|
-| Searches | **Support** (remote tech support / customer service) and **Software Engineering** (Java/full-stack, QA, Sales Engineer) | **Customer Support** (non-technical, no sales) and **Receptionist** / front desk |
+| Searches | **Support** (remote tech support / customer service) and **Software Engineering** (Java/full-stack, QA, Sales Engineer) | **Customer Support** (non-technical, no sales), **Receptionist** / front desk, and **Work From Home** (remote only) |
 | Settings file | `job_tracker/config.toml` | `job_tracker/config-elizabeth.toml` |
 | Spreadsheet | `~/JobTracker/JobStuff/Job_Search_Log.xlsx` | `~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx` |
 | Job Tracker page | [Synced](https://claude.ai/artifact/SXzbUitgGK2Q5jWACxrAct) | None (spreadsheet only) |
@@ -34,7 +34,9 @@ Every command runs **Julian's** profile by default. To run **Elizabeth's** inste
 
 The two profiles don't share anything except your API keys. Each has its own settings, spreadsheet and backups, so running one never touches the other's list.
 
-**How to tell which one ran:** the first line of the output shows the spreadsheet being updated (`…/JobStuff/…` for Julian, `…/ElizabethJobs/…` for Elizabeth). The search names in the summary (Support / Software Engineering, or Customer Support / Receptionist) also show which profile it was.
+**How to tell which one ran:** the first line of the output shows the spreadsheet being updated (`…/JobStuff/…` for Julian, `…/ElizabethJobs/…` for Elizabeth). The search names in the summary (Support / Software Engineering, or Customer Support / Receptionist / Work From Home) also show which profile it was.
+
+To run only Elizabeth's at-home search: `python3 track.py --config config-elizabeth.toml --category "Work From Home"`.
 
 ### Optional: one-word shortcuts
 
@@ -112,10 +114,14 @@ open ~/JobTracker/JobStuff/Job_Search_Log.xlsx   # 5. look at the results
 
 Elizabeth's settings are in `job_tracker/config-elizabeth.toml`:
 
-- **Searches:** Customer Support (non-technical) and Receptionist / front desk, including salon and spa front desk and virtual receptionist roles.
+- **Searches:**
+  - **Customer Support:** non-technical.
+  - **Receptionist / front desk:** including salon and spa front desk and virtual receptionist roles.
+  - **Work From Home:** remote only. Covers virtual reception, scheduling (patient, appointment, booking), virtual and administrative assistant, data entry and order processing, chat and email support, reservations, and client care.
 - **Location:** remote anywhere in the U.S., or on-site within about 20 miles of Pflugerville.
 - **Pay:** $10/hr or more.
 - **No sales:** sales titles and jobs whose description mentions cold calling, sales quotas or commission-only pay are skipped.
+- **Scam filter (Work From Home):** skips postings that mention starter kits, buying equipment, depositing checks, training or registration fees, or "unlimited earning potential". It also skips appointment setter, lead generation and telemarketing, which are sales jobs under another name.
 
 Her spreadsheet is `~/JobTracker/ElizabethJobs/Job_Search_Log.xlsx`. It's created automatically the first time `track.py` runs without `--dry-run`, in the same layout as Julian's.
 
